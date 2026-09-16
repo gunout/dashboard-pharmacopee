@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Pharmacopée — 250 Huiles Essentielles</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a1a12;--bg-2:#0f2419;--surface:#132a1e;--surface-2:#1a3527;
+  --border:#234a35;--text:#e8f5ee;--text-dim:#93b8a5;--text-faint:#5f8570;
+  --accent:#4ade80;--accent-2:#22c55e;--gold:#eab308;
+  --shadow:0 10px 40px -12px rgba(0,0,0,.6);--radius:14px;
+}
+html[data-theme="light"]{
+  --bg:#f0f7f2;--bg-2:#e6f1ea;--surface:#fff;--surface-2:#f4faf6;
+  --border:#d1e5d8;--text:#0a1a12;--text-dim:#4a6b58;--text-faint:#8aa698;
+  --shadow:0 10px 40px -14px rgba(0,50,20,.15);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;min-height:100vh;transition:background .3s,color .3s}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+a{color:var(--accent);text-decoration:none}
+
+#errorBox{display:none;background:#7f1d1d;color:#fff;padding:14px 20px;font-family:monospace;font-size:.82rem;white-space:pre-wrap;border-bottom:2px solid #ef4444;position:sticky;top:0;z-index:1000}
+#errorBox.show{display:block}
+
+header{position:relative;padding:50px 24px 34px;background:radial-gradient(ellipse 70% 60% at 50% -20%,rgba(74,222,128,.15),transparent 70%),linear-gradient(180deg,var(--bg-2),var(--bg));border-bottom:1px solid var(--border)}
+.header-inner{max-width:1400px;margin:0 auto;position:relative;z-index:1}
+.eyebrow{display:inline-block;font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(74,222,128,.35);border-radius:999px;padding:6px 16px;margin-bottom:16px;background:rgba(74,222,128,.08)}
+h1{font-size:clamp(1.7rem,4vw,2.6rem);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-bottom:10px}
+h1 .accent{background:linear-gradient(90deg,var(--accent),var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{color:var(--text-dim);font-size:1rem;max-width:760px;margin-bottom:28px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-top:20px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;position:relative;overflow:hidden;transition:transform .25s,border-color .25s}
+.kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--gold))}
+.kpi:hover{transform:translateY(-3px);border-color:var(--accent)}
+.kpi-num{font-size:1.6rem;font-weight:800;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums}
+.kpi-lbl{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-faint);margin-top:6px}
+.theme-btn{position:absolute;top:22px;right:22px;z-index:5;width:42px;height:42px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:1.1rem;display:grid;place-items:center;transition:transform .3s,border-color .3s}
+.theme-btn:hover{transform:rotate(35deg);border-color:var(--accent)}
+.tabs{position:sticky;top:0;z-index:50;background:rgba(10,26,18,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:12px 24px;overflow-x:auto}
+html[data-theme="light"] .tabs{background:rgba(240,247,242,.9)}
+.tabs-inner{max-width:1400px;margin:0 auto;display:flex;gap:6px}
+.tab{padding:9px 16px;border-radius:999px;font-size:.84rem;font-weight:600;color:var(--text-dim);white-space:nowrap;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.tab:hover{color:var(--text);background:var(--surface-2)}
+.tab.active{background:linear-gradient(135deg,var(--accent-2),var(--accent));color:#0a1a12;box-shadow:0 6px 18px -6px rgba(74,222,128,.5)}
+main{max-width:1400px;margin:0 auto;padding:28px 24px 80px}
+.view{display:none}
+.view.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border);position:relative}
+.section-head::after{content:"";position:absolute;bottom:-1px;left:0;width:60px;height:3px;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:3px}
+.section-head h2{font-size:1.25rem;font-weight:800}
+.result-count{font-size:.82rem;color:var(--text-faint)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px;align-items:center}
+.search-box{position:relative;flex:1 1 240px;min-width:200px}
+.search-box input{width:100%;padding:11px 16px 11px 40px;border-radius:11px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:.9rem;transition:border-color .2s,box-shadow .2s}
+.search-box input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,222,128,.15)}
+.search-box::before{content:"🔍";position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:.85rem;opacity:.6;pointer-events:none}
+select{padding:11px 14px;border-radius:11px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:.88rem;font-family:inherit;cursor:pointer;transition:border-color .2s}
+select:focus{outline:none;border-color:var(--accent)}
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;margin-bottom:22px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.panel::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--gold))}
+.panel h3{font-size:.98rem;font-weight:800;margin-bottom:16px;color:var(--text);display:flex;align-items:center;justify-content:space-between}
+.panel h3 .hint{font-size:.72rem;font-weight:500;color:var(--text-faint)}
+.chart-wrap{position:relative;width:100%;height:280px}
+.chart-wrap.tall{height:360px}
+.chart-wrap canvas{display:block;max-width:100%}
+.no-chart{display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-faint);font-size:.82rem;text-align:center;padding:20px;background:var(--surface-2);border-radius:10px;border:1px dashed var(--border)}
+.oils-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.oil-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;position:relative;overflow:hidden;transition:transform .22s,border-color .22s,box-shadow .22s;animation:cardIn .4s ease backwards}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.oil-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--oil-color,#4ade80)}
+.oil-card:hover{transform:translateY(-4px);border-color:var(--oil-color,#4ade80);box-shadow:0 12px 30px -12px rgba(0,0,0,.5)}
+.oil-card.selected{border-color:var(--oil-color,#4ade80);box-shadow:0 0 0 2px var(--oil-color,#4ade80)}
+.oil-name{font-weight:800;font-size:.95rem;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.oil-name::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--oil-color,#4ade80);flex-shrink:0}
+.oil-type{font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-faint);font-weight:700;margin-bottom:10px}
+.oil-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.76rem}
+.oil-stat-lbl{color:var(--text-faint);font-size:.68rem}
+.oil-stat-val{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px;position:relative;overflow:hidden}
+.info-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--oil-color,#4ade80)}
+.info-card h3{font-size:1.3rem;font-weight:800;margin-bottom:6px}
+.type-badge{display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:7px;background:rgba(74,222,128,.15);color:var(--oil-color,#4ade80);border:1px solid var(--oil-color,#4ade80);margin-bottom:14px}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:14px}
+.info-block h4{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-faint);font-weight:800;margin-bottom:8px}
+.info-block ul{list-style:none;display:flex;flex-direction:column;gap:4px}
+.info-block li{font-size:.84rem;color:var(--text-dim);padding-left:14px;position:relative}
+.info-block li::before{content:"";position:absolute;left:0;top:.55em;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.info-block .pill{display:inline-block;padding:4px 10px;border-radius:7px;background:var(--surface-2);border:1px solid var(--border);font-size:.78rem;margin:2px 4px 2px 0;color:var(--text-dim)}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+thead{background:var(--surface-2);position:sticky;top:0;z-index:1}
+th{padding:12px 14px;text-align:left;font-weight:800;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);cursor:pointer;user-select:none;white-space:nowrap;border-bottom:1px solid var(--border)}
+th:hover{color:var(--accent)}
+th .sort{opacity:.4;margin-left:4px;font-size:.7rem}
+th.sorted .sort{opacity:1;color:var(--accent)}
+td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text-dim);font-variant-numeric:tabular-nums}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:var(--surface-2)}
+td.oil-name-td{font-weight:700;color:var(--text)}
+td.num{text-align:right}
+.type-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.compare-selects{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;max-height:220px;overflow-y:auto;padding:6px}
+.compare-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:9px;font-size:.8rem;font-weight:600;background:var(--surface);border:1px solid var(--border);color:var(--text-dim);cursor:pointer;transition:all .2s}
+.compare-chip:hover{border-color:var(--accent);color:var(--text)}
+.compare-chip.active{background:rgba(74,222,128,.2);border-color:var(--chip-color,#4ade80);color:var(--chip-color,#4ade80)}
+.compare-chip .dot{width:8px;height:8px;border-radius:50%;background:var(--chip-color,#4ade80)}
+.empty{text-align:center;padding:60px 20px;color:var(--text-faint)}
+.empty .big{font-size:2.4rem;margin-bottom:12px;opacity:.5}
+footer{border-top:1px solid var(--border);padding:28px 24px;text-align:center;color:var(--text-faint);font-size:.8rem;background:var(--bg-2)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--accent);color:var(--text);padding:12px 22px;border-radius:12px;font-size:.86rem;font-weight:600;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:all .3s ease;z-index:200;max-width:90vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:640px){
+  header{padding:40px 16px 24px}.theme-btn{top:14px;right:14px;width:38px;height:38px}
+  main{padding:18px 14px 60px}.tabs{padding:10px 14px}.chart-wrap{height:240px}
+  .charts-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="errorBox" role="alert"></div>
+<button class="theme-btn" id="themeBtn" aria-label="Thème">🌙</button>
+
+<header>
+  <div class="header-inner">
+    <span class="eyebrow">🌿 Dashboard interactif</span>
+    <h1>Pharmacopée des <span class="accent">Huiles Essentielles</span></h1>
+    <p class="subtitle">Analyse complète de <strong>250 huiles essentielles</strong> — production, marché, prix, propriétés thérapeutiques et durabilité 2000–2025.</p>
+    <div class="kpis" id="kpis"></div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <div class="tabs-inner">
+    <button class="tab active" data-view="overview">📊 Vue d'ensemble</button>
+    <button class="tab" data-view="oils">🌿 Toutes les huiles</button>
+    <button class="tab" data-view="analyse">📈 Analyse détaillée</button>
+    <button class="tab" data-view="comparateur">⚖️ Comparateur</button>
+    <button class="tab" data-view="table">📋 Tableau</button>
+  </div>
+</nav>
+
+<main>
+  <section class="view active" id="view-overview">
+    <div class="section-head"><h2>Vue d'ensemble du marché</h2><span class="result-count">Données 2025</span></div>
+    <div class="charts-grid">
+      <div class="panel"><h3>Répartition par type <span class="hint" id="hintTypes"></span></h3><div class="chart-wrap"><canvas id="chartType"></canvas><div class="no-chart" id="fallbackType" style="display:none"></div></div></div>
+      <div class="panel"><h3>Top 15 par valeur <span class="hint">M€</span></h3><div class="chart-wrap tall"><canvas id="chartTopValue"></canvas><div class="no-chart" id="fallbackTopValue" style="display:none"></div></div></div>
+      <div class="panel"><h3>Prix vs Production</h3><div class="chart-wrap tall"><canvas id="chartScatter"></canvas><div class="no-chart" id="fallbackScatter" style="display:none"></div></div></div>
+      <div class="panel"><h3>Top 15 par prix <span class="hint">€/kg</span></h3><div class="chart-wrap tall"><canvas id="chartTopPrice"></canvas><div class="no-chart" id="fallbackTopPrice" style="display:none"></div></div></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-oils">
+    <div class="section-head"><h2>Catalogue complet</h2><span class="result-count" id="oilsCount"></span></div>
+    <div class="toolbar">
+      <div class="search-box"><input type="search" id="search" placeholder="Rechercher…" autocomplete="off"></div>
+      <select id="filterType"><option value="">Tous les types</option></select>
+      <select id="sortBy">
+        <option value="name">Trier par nom</option>
+        <option value="production">Production ↓</option>
+        <option value="price">Prix ↓</option>
+        <option value="value">Valeur ↓</option>
+        <option value="yield">Rendement ↓</option>
+      </select>
+    </div>
+    <div class="oils-grid" id="oilsGrid"></div>
+  </section>
+
+  <section class="view" id="view-analyse">
+    <div class="section-head"><h2>Analyse détaillée</h2><span class="result-count">Sélectionnez une huile</span></div>
+    <div id="analyseContent"><div class="empty"><div class="big">🌿</div><p>Cliquez sur une huile dans le catalogue.</p></div></div>
+  </section>
+
+  <section class="view" id="view-comparateur">
+    <div class="section-head"><h2>Comparateur multi-critères</h2><span class="result-count" id="compareCount">0 sélectionnée(s)</span></div>
+    <div class="toolbar"><div class="search-box"><input type="search" id="compareSearch" placeholder="Rechercher une huile…" autocomplete="off"></div></div>
+    <div class="compare-selects" id="compareChips"></div>
+    <div class="charts-grid" id="compareCharts" style="display:none">
+      <div class="panel"><h3>Radar multi-critères</h3><div class="chart-wrap tall"><canvas id="chartRadar"></canvas></div></div>
+      <div class="panel"><h3>Comparaison directe</h3><div class="chart-wrap tall"><canvas id="chartBarCompare"></canvas></div></div>
+    </div>
+    <div class="empty" id="compareEmpty"><div class="big">⚖️</div><p>Sélectionnez au moins 2 huiles.</p></div>
+  </section>
+
+  <section class="view" id="view-table">
+    <div class="section-head"><h2>Tableau complet</h2><span class="result-count" id="tableCount"></span></div>
+    <div class="toolbar">
+      <div class="search-box"><input type="search" id="tableSearch" placeholder="Filtrer le tableau…" autocomplete="off"></div>
+      <select id="tableFilterType"><option value="">Tous les types</option></select>
+    </div>
+    <div class="table-wrap">
+      <table id="oilsTable">
+        <thead><tr>
+          <th data-key="name">Huile <span class="sort">↕</span></th>
+          <th data-key="type">Type <span class="sort">↕</span></th>
+          <th data-key="production" class="num">Production (t) <span class="sort">↕</span></th>
+          <th data-key="price" class="num">Prix (€/kg) <span class="sort">↕</span></th>
+          <th data-key="value" class="num">Valeur (M€) <span class="sort">↕</span></th>
+          <th data-key="rendement" class="num">Rendement <span class="sort">↕</span></th>
+          <th data-key="regions">Régions <span class="sort">↕</span></th>
+        </tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer><p>🌿 Dashboard Pharmacopée — <strong>250 huiles essentielles</strong> · Données simulées 2000–2025</p></footer>
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* ===== AFFICHAGE D'ERREUR ===== */
+window.onerror = function(msg, src, line, col){
+  var b = document.getElementById('errorBox');
+  if(b){ b.textContent = "Erreur JS : " + msg + "\n  → ligne " + line + ", col " + col; b.classList.add('show'); }
+  console.error(msg, src, line, col);
+};
+
+/* ===== DONNÉES COMPACTES (250 huiles) ===== */
+/* Format : nom|type|prod|prix|rend|regions|propriétés */
+var OIL_STR = [
+"Lavande vraie|relaxante|150|45|1.5|France,Bulgarie,Chine|calmante,cicatrisante,antiseptique,analgésique",
+"Lavandin grosso|respiratoire|110|26|1.7|France,Espagne,Italie|expectorante,antiseptique,calmante",
+"Lavandin abrial|respiratoire|90|28|1.6|France,Espagne|expectorante,décongestionnante",
+"Lavandin super|respiratoire|95|30|1.6|France,Espagne|expectorante,décongestionnante",
+"Lavande aspic|antiseptique|60|40|1.2|France,Espagne,Italie|antibactérienne,antifongique,cicatrisante",
+"Lavande stoechas|relaxante|50|50|1.2|Espagne,Maroc,Grèce|calmante,antispasmodique",
+"Lavande fine|relaxante|130|52|1.4|France,Provence|calmante,cicatrisante,antiseptique",
+"Lavande papillon|relaxante|40|48|1.3|France,Espagne|calmante,cicatrisante",
+"Menthe poivrée|tonique|80|60|1.2|USA,France,Inde|digestive,rafraîchissante,antalgique",
+"Menthe verte|digestive|90|35|1.4|USA,Chine,Inde|digestive,rafraîchissante,antiseptique",
+"Menthe des champs|digestive|70|30|1.2|USA,Inde,Chine|digestive,rafraîchissante",
+"Menthe bergamote|digestive|45|55|0.9|France,Italie,USA|digestive,rafraîchissante,antispasmodique",
+"Menthe citronnée|digestive|55|48|1.0|France,USA,Inde|digestive,rafraîchissante",
+"Menthe aquatique|digestive|40|42|1.1|Europe,Asie,USA|digestive,tonique",
+"Menthe pouliot|antiseptique|30|55|0.9|France,Maroc,Espagne|antibactérienne,antifongique",
+"Thym thymol|antiseptique|50|45|1.2|France,Espagne,Maroc|antibactérienne,immunostimulante",
+"Thym linalol|antiseptique|35|50|1.2|France,Espagne,Maroc|antibactérienne,immunostimulante",
+"Thym thujanol|antiseptique|15|85|1.0|France,Maroc|antibactérienne,hépatique",
+"Thym géraniol|antiseptique|20|65|1.0|France,Espagne|antibactérienne,antifongique",
+"Thym citronné|antiseptique|25|55|1.0|France,Espagne,Italie|antibactérienne,digestive",
+"Serpolet|antiseptique|20|55|0.8|France,Espagne,Maroc|antibactérienne,immunostimulante",
+"Origan compact|antiseptique|35|58|1.0|Grèce,Turquie,Maroc|antibactérienne,antivirale",
+"Origan Espagne|antiseptique|28|52|1.0|Espagne,Maroc|antibactérienne,antifongique",
+"Marjolaine coquilles|relaxante|25|65|0.7|France,Maroc|sédative,antispasmodique",
+"Marjolaine jardins|relaxante|35|50|0.8|France,Égypte,Tunisie|sédative,digestive",
+"Sarriette jardins|antiseptique|22|58|0.7|France,Espagne,Italie|antibactérienne,antifongique",
+"Sarriette montagnes|antiseptique|18|62|0.7|France,Espagne|antibactérienne,stimulante",
+"Sauge officinale|hormonale|30|85|0.5|France,Espagne,Croatie|équilibrante,antiseptique,digestive",
+"Sauge sclarée|hormonale|18|80|0.5|France,Espagne,Maroc|équilibrante,neurotonique",
+"Sauge trilobée|hormonale|10|105|0.4|France,Espagne,Maroc|équilibrante,antispasmodique",
+"Sauge Espagne|hormonale|15|95|0.4|Espagne,Maroc,France|équilibrante,antiseptique",
+"Romarin camphre|tonique|45|38|1.0|France,Espagne,Maroc|tonique,hépatique,neurotonique",
+"Romarin cinéole|tonique|90|38|1.0|France,Espagne,Tunisie|tonique,hépatique,neurotonique",
+"Romarin verbénone|tonique|30|55|0.9|France,Espagne,Corse|tonique,hépatique,neurotonique",
+"Hysope officinale|respiratoire|22|68|0.5|France,Espagne,Italie|expectorante,antiseptique",
+"Hysope couchée|respiratoire|18|80|0.4|France,Espagne|expectorante,antivirale",
+"Hysope Provence|respiratoire|20|70|0.5|France,Espagne|expectorante,tonique",
+"Monarde|antiseptique|20|75|0.5|USA,Canada,France|antibactérienne,antifongique",
+"Monarde citronnée|antiseptique|15|85|0.4|USA,Canada|antibactérienne,calmante",
+"Monarde fistuleuse|antiseptique|12|90|0.4|USA,Canada|antibactérienne,expectorante",
+"Agastache|relaxante|15|70|0.5|USA,Canada,France|calmante,digestive",
+"Népéta|relaxante|25|60|0.6|France,Europe,Asie|calmante,antispasmodique,digestive",
+"Cataire|relaxante|18|68|0.5|France,Europe,USA|calmante,antispasmodique",
+"Mélisse|calmante|15|120|0.3|France,Espagne,Italie|calmante,antispasmodique,antivirale",
+"Mélisse citronnelle|calmante|12|135|0.3|France,Espagne|calmante,antispasmodique",
+"Basilic exotique|digestive|50|40|1.0|Thaïlande,Vietnam,Laos|digestive,antispasmodique,antibactérienne",
+"Basilic tropical|digestive|65|48|0.9|Comores,Madagascar|digestive,antispasmodique,neurotonique",
+"Basilic vrai|digestive|55|45|0.9|France,Égypte,Italie|digestive,antispasmodique,tonique",
+"Basilic pourpre|digestive|25|55|0.9|France,Italie,USA|digestive,antispasmodique,antiseptique",
+"Basilic citron|digestive|30|50|0.9|France,USA,Égypte|digestive,antispasmodique,tonique",
+"Patchouli|grounding|35|85|0.5|Indonésie,Chine,Inde|grounding,antiseptique,antifongique,aphrodisiaque",
+"Patchouli noir|grounding|25|95|0.5|Indonésie,Inde|grounding,antiseptique,aphrodisiaque",
+"Arbre à thé|antiseptique|120|35|2.0|Australie,Chine,Afrique du Sud|antibactérienne,antifongique,immunostimulante",
+"Tea tree citronné|antiseptique|40|45|1.5|Australie|antibactérienne,antifongique,tonique",
+"Niaouli|immunitaire|55|42|1.4|Madagascar,Nouvelle-Calédonie|immunostimulante,antivirale,expectorante",
+"Ravintsara|immunitaire|40|55|0.8|Madagascar,Comores|antivirale,immunostimulante,neurotonique",
+"Cajeput|respiratoire|42|32|1.1|Indonésie,Malaisie,Australie|expectorante,antiseptique,antalgique",
+"Manuka|antiseptique|15|130|0.3|Nouvelle-Zélande,Australie|antibactérienne,antifongique,cicatrisante",
+"Kanuka|antiseptique|10|100|0.3|Nouvelle-Zélande|antibactérienne,antifongique",
+"Eucalyptus radiata|respiratoire|200|25|1.8|Australie,Chine,Portugal|expectorante,décongestionnante,fébrifuge",
+"Eucalyptus globulus|respiratoire|180|22|1.7|Australie,Chine,Portugal|expectorante,antiseptique,décongestionnante",
+"Eucalyptus citronné|répulsif|80|30|1.5|Brésil,Australie,Chine|répulsive,antifongique",
+"Eucalyptus mentholé|respiratoire|60|28|1.4|Australie,Chine|expectorante,rafraîchissante",
+"Eucalyptus dives|respiratoire|90|24|1.6|Australie,Afrique du Sud|expectorante,antiseptique",
+"Eucalyptus polybractea|respiratoire|70|32|1.5|Australie|expectorante,antivirale,immunostimulante",
+"Eucalyptus smithii|respiratoire|75|28|1.5|Australie,Chine|expectorante,calmante",
+"Eucalyptus staigeriana|respiratoire|40|45|1.3|Australie,Brésil|expectorante,tonique,cicatrisante",
+"Myrte|respiratoire|25|60|0.5|France,Tunisie,Maroc|expectorante,décongestionnante,tonique",
+"Myrte citronné|respiratoire|15|70|0.4|Australie,France|expectorante,calmante",
+"Girofle clou|antiseptique|60|40|1.5|Madagascar,Indonésie,Sri Lanka|antiseptique,antalgique,stimulante",
+"Girofle feuilles|antiseptique|55|30|1.6|Madagascar,Indonésie|antiseptique,antalgique,stimulante",
+"Cannelle Ceylan|stimulante|40|80|0.6|Sri Lanka,Madagascar,Inde|stimulante,antiseptique,digestive",
+"Cannelle Chine|stimulante|45|65|0.6|Chine,Vietnam,Indonésie|stimulante,réchauffante",
+"Cannelle cassia|stimulante|35|70|0.6|Chine,Vietnam|stimulante,réchauffante",
+"Palmarosa|cosmétique|25|70|0.6|Inde,Népal,Indonésie|régénérante,hydratante,antibactérienne",
+"Géranium rosat|équilibrante|45|75|0.7|Égypte,Maroc,Réunion|équilibrante,hémostatique,cicatrisante",
+"Géranium bourbon|équilibrante|35|95|0.6|Réunion,Madagascar|équilibrante,astringente,cicatrisante",
+"Géranium Égypte|équilibrante|40|68|0.6|Égypte,Maroc|équilibrante,hémostatique",
+"Citron|détoxifiante|180|20|0.3|Italie,Espagne,USA,Argentine|antibactérienne,détoxifiante,tonique,digestive",
+"Citron vert|tonique|100|25|0.4|Mexique,Inde,Brésil|tonique,digestive,détoxifiante",
+"Citron Sicile|détoxifiante|170|22|0.3|Italie,USA|antibactérienne,détoxifiante,tonique",
+"Citron Méditerranée|détoxifiante|175|20|0.3|Italie,Espagne,Argentine|antibactérienne,détoxifiante",
+"Lime Tahiti|tonique|60|35|0.4|Tahiti,Mexique,Brésil|tonique,digestive,antiseptique",
+"Citron bergamote|équilibrante|50|45|0.4|Italie,France,Argentine|équilibrante,digestive",
+"Bergamote|équilibrante|90|35|0.4|Italie,Côte d'Ivoire,Argentine|équilibrante,antidépressive,digestive",
+"Bergamote Calabre|équilibrante|70|45|0.4|Italie|équilibrante,antidépressive",
+"Orange douce|relaxante|200|18|0.4|Brésil,USA,Espagne|relaxante,antiseptique,digestive,tonique",
+"Orange amère|digestive|60|25|0.4|Espagne,Italie,Maroc|digestive,antispasmodique,sédative",
+"Orange sanguine|relaxante|80|25|0.4|Italie,Espagne|relaxante,antiseptique,digestive",
+"Orange Valencia|relaxante|85|20|0.4|Espagne,USA|relaxante,antiseptique",
+"Mandarine|calmante|150|22|0.4|Italie,Espagne,Maroc|calmante,sédative,digestive",
+"Mandarine verte|calmante|60|28|0.4|Italie,Brésil|calmante,sédative,digestive",
+"Clémentine|calmante|55|24|0.4|Espagne,Italie,Maroc|calmante,digestive",
+"Pamplemousse|détoxifiante|120|28|0.4|USA,Israël,Chine|détoxifiante,tonique,diurétique",
+"Pamplemousse rose|détoxifiante|80|30|0.4|USA,Israël|détoxifiante,tonique,stimulante",
+"Pomelo|détoxifiante|90|26|0.4|USA,Chine,Israël|détoxifiante,tonique,diurétique",
+"Néroli|relaxante|10|180|0.1|Tunisie,Maroc,Égypte|anti-anxiété,apaisante,antispasmodique",
+"Néroli Tunisie|relaxante|8|200|0.1|Tunisie|anti-anxiété,apaisante",
+"Petit grain bigaradier|relaxante|15|75|0.2|Paraguay,Maroc,Espagne|sédative,antispasmodique,neurotonique",
+"Petit grain mandarinier|relaxante|12|80|0.2|Italie,Brésil,Maroc|sédative,antispasmodique,calmante",
+"Yuzu|équilibrante|12|120|0.3|Japon,Corée,Chine|équilibrante,calmante,antidépressive",
+"Combava|digestive|28|42|0.4|Inde,Sri Lanka,Indonésie|digestive,antiseptique,détoxifiante",
+"Kaffir lime|tonique|18|55|0.4|Thaïlande,Indonésie,Vietnam|tonique,digestive,antiseptique",
+"Ylang-Ylang|aphrodisiaque|30|85|0.5|Madagascar,Comores,Mayotte|aphrodisiaque,sédative,régulatrice",
+"Ylang extra|aphrodisiaque|15|120|0.3|Madagascar,Comores|aphrodisiaque,sédative,équilibrante",
+"Ylang complète|aphrodisiaque|22|95|0.4|Madagascar,Comores|aphrodisiaque,sédative",
+"Camomille romaine|calmante|35|95|0.4|France,Égypte,Allemagne|calmante,anti-inflammatoire,antispasmodique",
+"Camomille allemande|calmante|30|110|0.3|Allemagne,Égypte,Hongrie|calmante,anti-inflammatoire,apaisante",
+"Camomille maroc|calmante|25|100|0.35|Maroc,Espagne|calmante,antispasmodique",
+"Camomille noble|calmante|28|105|0.35|France,Maroc,Égypte|calmante,anti-inflammatoire",
+"Camomille sauvage|calmante|18|115|0.3|France,Europe|calmante,anti-inflammatoire",
+"Hélichryse italienne|cicatrisante|9|210|0.1|Corse,Sardaigne,Italie|anti-inflammatoire,cicatrisante,hémostatique",
+"Hélichryse stoechas|cicatrisante|7|195|0.1|France,Espagne,Grèce|cicatrisante,anti-inflammatoire",
+"Hélichryse Corse|cicatrisante|6|230|0.1|Corse,France|anti-inflammatoire,cicatrisante,régénérante",
+"Achillée millefeuille|cicatrisante|10|85|0.3|France,Allemagne,Europe|cicatrisante,anti-inflammatoire,astringente",
+"Tanaisie|antiparasitaire|8|85|0.2|France,Europe,Asie|antiparasitaire,vermifuge,antispasmodique",
+"Armoise blanche|hormonale|22|65|0.6|Maroc,France,Algérie|équilibrante,antispasmodique,emménagogue",
+"Armoise vulgaire|hormonale|18|70|0.5|France,Europe,Asie|emménagogue,antispasmodique,vermifuge",
+"Aurone|hormonale|15|75|0.5|France,Italie,Maroc|emménagogue,antispasmodique,tonique",
+"Estragon|digestive|30|60|0.6|France,Espagne,USA|digestive,antispasmodique,tonique",
+"Absinthe|neurotonique|8|90|0.2|France,Suisse,Espagne|neurotonique,antispasmodique,digestive",
+"Tagète|antifongique|12|90|0.3|France,Inde,Madagascar|antifongique,antibactérienne,antiparasitaire",
+"Œillet|cosmétique|5|140|0.1|France,Maroc,Égypte|apaisante,régénérante,astringente",
+"Bleuet|cosmétique|6|120|0.2|France,Europe de l'Est|apaisante,anti-inflammatoire,régénérante",
+"Souci|cosmétique|10|80|0.3|France,Égypte,Europe|régénérante,anti-inflammatoire,apaisante",
+"Bourrache|cosmétique|8|95|0.2|France,Méditerranée|régénérante,hydratante,anti-inflammatoire",
+"Onagre|cosmétique|10|80|0.2|France,USA,Chine|régénérante,hydratante,équilibrante",
+"Hibiscus|cosmétique|8|90|0.2|Égypte,Inde,Mexique|astringente,antioxydante,hydratante",
+"Immortelle sables|cicatrisante|6|150|0.1|Corse,Sardaigne|cicatrisante,anti-inflammatoire",
+"Jasmin|aphrodisiaque|10|200|0.1|Inde,Égypte,Maroc|aphrodisiaque,relaxante,antispasmodique",
+"Jasmin sambac|aphrodisiaque|6|240|0.1|Inde,Égypte,Chine|aphrodisiaque,relaxante,apaisante",
+"Rose Damas|cosmétique|8|250|0.1|Bulgarie,Turquie,Maroc|équilibrante,hydratante,tonique",
+"Rose centifolia|cosmétique|6|280|0.1|France,Maroc|équilibrante,hydratante,régénérante",
+"Rose musquée|cosmétique|5|260|0.1|Chili,Maroc,France|régénérante,hydratante,apaisante",
+"Géranium à rose|équilibrante|20|90|0.4|France,Égypte,Maroc|équilibrante,astringente,cicatrisante",
+"Violette|cosmétique|5|170|0.1|France,Italie,Allemagne|régénérante,hydratante,apaisante",
+"Mimosa|cosmétique|5|180|0.1|France,Maroc,Italie|régénérante,hydratante,équilibrante",
+"Chèvrefeuille|relaxante|6|130|0.1|France,Chine,Inde|relaxante,apaisante,antispasmodique",
+"Houblon|relaxante|10|90|0.3|France,Allemagne,USA|sédative,calmante,antispasmodique",
+"Litsée citronnée|calmante|15|80|0.4|Chine,Vietnam,Australie|calmante,antispasmodique,antiseptique",
+"Roseau aromatique|cosmétique|5|145|0.1|Inde,Népal,Bhoutan|régénérante,équilibrante,antiseptique",
+"Verveine citronnée|digestive|22|58|0.6|France,Espagne,Maroc|digestive,carminative,antispasmodique",
+"Verveine odorante|digestive|20|55|0.6|France,Espagne,Maroc|digestive,carminative,tonique",
+"Fenouil doux|digestive|55|42|0.7|France,Inde,Égypte|digestive,carminative,détoxifiante",
+"Fenouil amer|digestive|25|55|0.6|Espagne,Italie,Maroc|digestive,carminative,antispasmodique",
+"Anis étoilé|digestive|20|70|0.4|Chine,Vietnam,Inde|digestive,antispasmodique,stimulante",
+"Anis vert|digestive|30|55|0.5|Espagne,Égypte,Turquie|digestive,carminative,expectorante",
+"Carvi|digestive|30|50|0.7|Pologne,Russie,Inde|digestive,carminative,antispasmodique",
+"Cumin|digestive|30|55|0.5|Inde,Égypte,Turquie|digestive,stimulante,antispasmodique",
+"Coriandre|digestive|55|50|0.8|Inde,Maroc,Russie|digestive,antispasmodique,tonique",
+"Coriandre graines|digestive|40|55|0.8|Inde,Maroc,Russie|digestive,antispasmodique,carminative",
+"Persil|détoxifiante|25|60|0.5|France,Inde,Égypte|détoxifiante,diurétique,antiseptique",
+"Angélique|digestive|20|85|0.5|France,Belgique,Allemagne|digestive,carminative,expectorante",
+"Livèche|digestive|12|75|0.3|France,Allemagne,Pologne|digestive,antispasmodique",
+"Céleri|détoxifiante|30|45|0.5|France,USA,Inde|détoxifiante,diurétique,tonique",
+"Ammi visnaga|spasmodique|10|90|0.3|Égypte,Maroc,Tunisie|antispasmodique,vasodilatateur,diurétique",
+"Khella|spasmodique|6|95|0.2|Égypte,Maroc,Tunisie|antispasmodique,vasodilatateur",
+"Carotte sauvage|cosmétique|15|90|0.2|France,Inde,USA|régénérante,antioxydante,équilibrante",
+"Carotte cultivée|cosmétique|20|70|0.2|France,Inde,USA|régénérante,antioxydante",
+"Cerfeuil|digestive|15|65|0.4|France,Europe|digestive,détoxifiante,tonique",
+"Cumin noir|digestive|18|80|0.4|Inde,Égypte,Turquie|digestive,stimulante,antispasmodique",
+"Laurier noble|respiratoire|30|45|0.6|Turquie,Espagne,Maroc|expectorante,antiseptique,stimulante",
+"Ciste ladanifère|cicatrisante|12|110|0.2|Espagne,France,Grèce|cicatrisante,hémostatique,astringente",
+"Cèdre Atlas|grounding|25|70|0.6|Maroc,Algérie|grounding,antiseptique,lymphotonique",
+"Cèdre Virginie|grounding|35|55|0.8|USA,Canada|grounding,antiseptique,répulsif",
+"Cèdre Himalaya|grounding|20|80|0.5|Inde,Népal,Pakistan|grounding,lymphotonique",
+"Cèdre Liban|grounding|8|95|0.3|Liban,Turquie,Chypre|grounding,antiseptique,lymphotonique",
+"Pin sylvestre|respiratoire|70|30|1.2|France,Suède,Russie|expectorante,antiseptique,tonique",
+"Pin maritime|respiratoire|60|28|1.1|France,Portugal,Espagne|expectorante,antiseptique,tonique",
+"Pin Alep|respiratoire|55|26|1.2|France,Espagne,Maroc|expectorante,antiseptique",
+"Pin Sibérie|respiratoire|35|55|0.9|Russie,Sibérie|expectorante,immunostimulante",
+"Pin noir|respiratoire|50|30|1.1|France,Autriche,Italie|expectorante,antiseptique",
+"Sapin baumier|respiratoire|40|45|0.9|Canada,USA|expectorante,antiseptique,tonique",
+"Sapin pectiné|respiratoire|50|35|1.0|France,Allemagne,Autriche|expectorante,antiseptique",
+"Épicéa|respiratoire|45|32|0.9|Scandinavie,Canada|expectorante,antiseptique,tonique",
+"Mélèze|respiratoire|30|42|0.8|France,Italie,Suisse|expectorante,antiseptique",
+"Cyprès|circulatoire|40|45|0.9|France,Espagne,Maroc|vasoconstrictrice,lymphotonique,tonique",
+"Cyprès Provence|circulatoire|35|48|0.9|France,Espagne,Italie|vasoconstrictrice,lymphotonique",
+"Genévrier|détoxifiante|30|55|0.6|France,Italie,Pologne|diurétique,détoxifiante,antiseptique",
+"Genévrier commun|détoxifiante|32|58|0.6|France,Italie,Pologne|diurétique,détoxifiante",
+"Bouleau|dermatologique|12|75|0.3|France,Scandinavie,Russie|drainante,diurétique,cicatrisante",
+"Chêne|astringente|8|90|0.2|France,Europe|astringente,cicatrisante,tonique",
+"Épinette noire|respiratoire|20|50|0.7|Canada,USA,Scandinavie|expectorante,antiseptique,tonique",
+"Pruche|respiratoire|15|55|0.7|Canada,USA|expectorante,antiseptique,tonique",
+"Encens Oliban|spirituelle|22|120|0.3|Oman,Somalie,Éthiopie|meditative,anti-inflammatoire,cicatrisante",
+"Oliban sacré|spirituelle|20|125|0.3|Oman,Somalie,Éthiopie|meditative,anti-inflammatoire",
+"Myrrhe|spirituelle|18|110|0.2|Somalie,Éthiopie,Yémen|anti-inflammatoire,cicatrisante,expectorante",
+"Benjoin|spirituelle|10|95|0.2|Indonésie,Thaïlande,Vietnam|antiseptique,expectorante,cicatrisante",
+"Ambre|spirituelle|6|160|0.1|Asie,Inde|meditative,apaisante,antiseptique",
+"Galbanum|spirituelle|6|140|0.1|Iran,Turquie,Syrie|meditative,antispasmodique,cicatrisante",
+"Gomme élémi|cicatrisante|8|90|0.2|Philippines,Indonésie,Malaisie|cicatrisante,antiseptique,expectorante",
+"Guaïac|spirituelle|5|160|0.1|Amérique du Sud,Caraïbes|meditative,antiseptique,expectorante",
+"Bois gaïac|grounding|8|130|0.1|Amérique du Sud,Antilles|grounding,antiseptique",
+"Bois hô|calmante|15|75|0.4|Chine,Japon,Taïwan|calmante,antispasmodique,tonique",
+"Bois rose|cosmétique|15|110|0.3|Brésil,Guyane,Pérou|régénérante,calmante,hydratante",
+"Bois santal|spirituelle|12|150|0.2|Inde,Australie,Nouvelle-Calédonie|meditative,apaisante,anti-inflammatoire",
+"Santal indien|spirituelle|6|220|0.1|Inde|meditative,apaisante,hydratante",
+"Santal australien|spirituelle|18|130|0.3|Australie|meditative,apaisante,hydratante",
+"Agarwood Oud|spirituelle|5|300|0.1|Inde,Malaisie,Cambodge|meditative,anti-inflammatoire,relaxante",
+"Vetiver|grounding|32|78|0.6|Haïti,Réunion,Indonésie|grounding,tonique nerveux,répulsif",
+"Cypriol|grounding|10|100|0.2|Inde,Népal|grounding,antiseptique,neurotonique",
+"Nard Spikenard|spirituelle|4|200|0.1|Inde,Népal,Chine|meditative,calmante,anti-inflammatoire",
+"Ledum Lédon|antiseptique|5|110|0.1|Canada,USA,Scandinavie|antibactérienne,antifongique,cicatrisante",
+"Rhododendron|anti-inflammatoire|6|100|0.2|Himalaya,Népal,Chine|anti-inflammatoire,antioxydante,tonique",
+"Rue|antiparasitaire|8|80|0.2|Europe,Afrique du Nord,Asie|antiparasitaire,antispasmodique,vermifuge",
+"Sassafras|antiseptique|6|90|0.2|USA,Amérique du Sud|antiseptique,détoxifiante,diurétique",
+"Chénopode|antiparasitaire|8|75|0.2|Amérique du Sud,Europe|antiparasitaire,antiseptique,vermifuge",
+"Cannabis CBD|relaxante|10|120|0.3|Europe,USA,Canada|relaxante,anti-inflammatoire,antispasmodique",
+"Cascarille|digestive|12|70|0.3|Amérique du Sud,Caraïbes|digestive,antispasmodique,expectorante",
+"Cade|dermatologique|8|95|0.2|France,Espagne,Maroc|régénérante,antiseptique,antiparasitaire",
+"Mandravasarotra|assainissante|12|75|0.4|Madagascar|assainissante,antiseptique,immunostimulante",
+"Cardamome|digestive|25|95|0.5|Guatemala,Inde,Sri Lanka|digestive,antispasmodique,expectorante",
+"Cardamome verte|digestive|20|105|0.5|Guatemala,Inde|digestive,antispasmodique,tonique",
+"Gingembre|digestive|70|55|0.8|Inde,Chine,Nigeria|digestive,tonique,anti-inflammatoire",
+"Curcuma|anti-inflammatoire|25|60|0.5|Inde,Chine,Indonésie|anti-inflammatoire,antioxydante,hépatique",
+"Poivre noir|digestive|45|65|0.5|Inde,Vietnam,Brésil|digestive,stimulante,antioxydante",
+"Poivre Sichuan|stimulante|18|70|0.4|Chine,Japon,Inde|stimulante,antalgique,tonique",
+"Poivre long|stimulante|12|80|0.4|Inde,Indonésie,Malaisie|stimulante,digestive,tonique",
+"Poivre Tasmanie|stimulante|8|95|0.3|Australie,Tasmanie|stimulante,antiseptique,digestive",
+"Poivre rose|stimulante|10|100|0.3|Pérou,Brésil,Madagascar|stimulante,digestive,tonique",
+"Piment Jamaïque|stimulante|15|75|0.4|Jamaïque,Amérique centrale|stimulante,antiseptique,digestive",
+"Noix muscade|digestive|25|65|0.5|Indonésie,Grenade,Inde|digestive,stimulante,antispasmodique",
+"Muscade|digestive|20|70|0.5|Indonésie,Grenade,Inde|digestive,stimulante,antispasmodique",
+"Ajowan|digestive|20|60|0.6|Inde,Iran,Égypte|digestive,antispasmodique,expectorante",
+"Bétel|stimulante|12|80|0.3|Inde,Thaïlande,Philippines|stimulante,antiseptique,antiparasitaire",
+"Nigelle|digestive|15|90|0.4|Égypte,Inde,Turquie|digestive,anti-inflammatoire,immunostimulante",
+"Moringa|cosmétique|8|100|0.2|Inde,Afrique,Philippines|régénérante,antioxydante,tonique",
+"Cacao|stimulante|10|95|0.3|Côte d'Ivoire,Ghana,Brésil|stimulante,antidépressive,tonique",
+"Café vert|stimulante|12|110|0.3|Brésil,Colombie,Éthiopie|stimulante,antioxydante,tonique",
+"Thé vert|stimulante|15|105|0.4|Chine,Inde,Japon|stimulante,antioxydante,astringente",
+"Thé blanc|stimulante|8|130|0.3|Chine,Inde|stimulante,antioxydante,apaisante",
+"Maté|stimulante|10|90|0.3|Argentine,Brésil,Paraguay|stimulante,tonique,amaigrissante",
+"Guarana|stimulante|8|120|0.2|Brésil,Venezuela|stimulante,tonique,antifatigue",
+"Cola|stimulante|6|140|0.2|Afrique de l'Ouest,Cameroun|stimulante,tonique,antidépressive",
+"Cannelle feuilles|stimulante|30|55|0.6|Madagascar,Inde|stimulante,antiseptique,digestive",
+"Citronnelle|répulsif|100|30|1.2|Inde,Chine,Vietnam|répulsive,antiseptique,antifongique",
+"Citronnelle Java|répulsif|80|32|1.2|Indonésie,Inde,Chine|répulsive,antiseptique,antifongique",
+"Lemongrass|répulsif|90|28|1.2|Thaïlande,Inde,Vietnam|répulsive,antiseptique,tonique",
+"Gaultherie|antalgique|15|65|0.4|Canada,USA,Chine|antalgique,anti-inflammatoire,décongestionnante",
+"Wintergreen|antalgique|18|55|0.4|USA,Canada,Chine|antalgique,anti-inflammatoire,tonique",
+"Camphre|respiratoire|60|35|1.2|Chine,Japon,Vietnam|expectorante,antiseptique,décongestionnante",
+"Calamus|neurotonique|18|70|0.4|Inde,Chine,Europe de l'Est|neurotonique,antispasmodique,digestive",
+"Inule odorante|respiratoire|8|110|0.2|France,Espagne,Maroc|expectorante,anti-inflammatoire",
+"Davana|aphrodisiaque|5|150|0.1|Inde,Népal|aphrodisiaque,calmante,tonique",
+"Myrtille|circulatoire|10|85|0.3|Europe,USA,Canada|vasoprotectrice,antioxydante,astringente",
+"Vanille|aphrodisiaque|8|150|0.1|Madagascar,Indonésie,Mexique|aphrodisiaque,calmante,antidépressive",
+"Tonka|aphrodisiaque|5|180|0.1|Brésil,Guyane,Venezuela|aphrodisiaque,calmante,antiseptique",
+"Fucus|dermatologique|10|70|0.3|France,Bretagne,Irlande|drainante,antioxydante,tonique",
+"Algue brune|dermatologique|8|80|0.2|Bretagne,Irlande,Chili|drainante,antioxydante,amincissante",
+"Algue rouge|dermatologique|6|95|0.2|Bretagne,Japon,Chili|drainante,hydratante,antioxydante",
+"Ortie|dermatologique|15|60|0.4|France,Europe|drainante,astringente,tonique",
+"Prêle|dermatologique|12|70|0.3|France,Europe,Amérique|drainante,régénérante,astringente",
+"Reine-des-prés|antalgique|10|75|0.3|France,Europe|antalgique,anti-inflammatoire,diurétique",
+"Harpagophytum|antalgique|8|90|0.2|Afrique du Sud,Namibie|antalgique,anti-inflammatoire,décontractante",
+"Gattilier|hormonale|10|95|0.3|France,Méditerranée|équilibrante,antispasmodique",
+"Yam|hormonale|8|110|0.2|Mexique,Amérique centrale|équilibrante,antispasmodique",
+"Soja|hormonale|12|85|0.2|USA,Brésil,Chine|équilibrante,antioxydante",
+"Trèfle rouge|hormonale|8|100|0.2|France,Europe,USA|équilibrante,antispasmodique",
+"Houblon extrait|relaxante|10|95|0.3|France,Allemagne,USA|sédative,calmante,antispasmodique",
+"Valériane|relaxante|15|90|0.4|France,Europe,Chine|sédative,calmante,hypnotique",
+"Passiflore|relaxante|12|95|0.3|France,Brésil,Pérou|sédative,calmante,antispasmodique",
+"Aubépine|circulatoire|10|85|0.3|France,Europe|régulatrice cardiaque,antispasmodique",
+"Olivier|circulatoire|12|80|0.3|France,Espagne,Italie|hypotensive,antioxydante,tonique",
+"Vigne rouge|circulatoire|8|90|0.2|France,Europe|vasoprotectrice,astringente,tonique",
+"Marronnier|circulatoire|6|100|0.2|France,Europe,Inde|vasoconstrictrice,anti-inflammatoire",
+"Hamamélis|circulatoire|10|85|0.3|USA,France,Europe|vasoconstrictrice,astringente",
+"Petit houx|circulatoire|8|95|0.2|Amérique du Sud,Brésil|vasoconstrictrice,lymphotonique",
+"Ginkgo|circulatoire|10|100|0.3|Chine,Japon,France|vasodilatatrice,antioxydante,neuroprotectrice",
+"Ginseng|tonique|8|150|0.2|Chine,Corée,USA|tonique,stimulante,adaptogène",
+"Éleuthérocoque|tonique|6|160|0.2|Sibérie,Chine,Corée|tonique,stimulante,adaptogène",
+"Ashwagandha|tonique|10|120|0.3|Inde,Népal|tonique,adaptogène,relaxante",
+"Rhodiola|tonique|6|180|0.2|Sibérie,Scandinavie,Himalaya|tonique,adaptogène,antifatigue",
+"Astragale|immunitaire|8|110|0.3|Chine,Mongolie|immunostimulante,adaptogène,tonique",
+"Échinacée|immunitaire|12|95|0.3|USA,Canada,France|immunostimulante,antivirale,anti-inflammatoire",
+"Propolis|antiseptique|18|120|0.4|France,Brésil,Chine|antibactérienne,antifongique,immunostimulante",
+"Gelée royale|immunitaire|8|180|0.2|France,Chine,Brésil|immunostimulante,tonique,antifatigue",
+"Miel Manuka|antiseptique|15|140|0.3|Nouvelle-Zélande|antibactérienne,cicatrisante,immunostimulante",
+"Frankincense|spirituelle|18|125|0.3|Oman,Somalie,Inde|meditative,anti-inflammatoire,immunostimulante",
+"Elemi Manille|cicatrisante|10|85|0.2|Philippines,Indonésie|cicatrisante,antiseptique,anti-inflammatoire",
+"Opopanax|spirituelle|6|120|0.2|Somalie,Éthiopie,Iran|meditative,antispasmodique,cicatrisante",
+"Styrax|spirituelle|5|140|0.1|Turquie,Honduras,Maroc|meditative,antiseptique,expectorante",
+"Labdanum|spirituelle|8|130|0.2|Espagne,Maroc,Grèce|meditative,astringente,antiseptique",
+"Mastic|spirituelle|6|150|0.2|Grèce,Turquie,Maroc|meditative,antiseptique,digestive",
+"Encens indien|spirituelle|10|130|0.2|Inde,Népal|meditative,anti-inflammatoire,immunostimulante",
+"Attar rose|cosmétique|4|400|0.05|Inde,Turquie|équilibrante,hydratante,apaisante",
+"Attar jasmin|aphrodisiaque|3|450|0.05|Inde,Égypte|aphrodisiaque,relaxante,apaisante",
+"Champa|spirituelle|5|180|0.1|Inde,Népal|meditative,apaisante,relaxante",
+"Nagarmotha|grounding|8|120|0.2|Inde,Népal|grounding,antiseptique,astringente",
+"Sugandhi|spirituelle|4|200|0.1|Inde|meditative,apaisante,relaxante",
+"Bakul|cosmétique|3|250|0.05|Inde,Sri Lanka|régénérante,hydratante,apaisante",
+"Kewda|spirituelle|4|220|0.1|Inde,Bangladesh|meditative,apaisante,tonique",
+"Mitti terre|grounding|5|150|0.1|Inde|grounding,apaisante,équilibrante",
+"Vetiver indien|grounding|20|90|0.5|Inde,Haïti|grounding,antiseptique,apaisante",
+"Hina Henné|cosmétique|8|110|0.3|Inde,Maroc,Égypte|régénérante,astringente,antifongique",
+"Ratanjot|cosmétique|5|130|0.2|Inde,Népal|régénérante,antioxydante,tonique",
+"Amaltas|cosmétique|4|140|0.1|Inde,Sri Lanka|régénérante,apaisante,antiseptique",
+"Karanj|dermatologique|6|120|0.2|Inde,Sri Lanka|antifongique,antibactérienne,régénérante",
+"Neem|dermatologique|12|90|0.3|Inde,Népal,Afrique|antifongique,antibactérienne,antiparasitaire",
+"Curry feuilles|digestive|10|100|0.3|Inde,Sri Lanka|digestive,antioxydante,tonique",
+"Fenugrec|hormonale|12|85|0.3|Inde,Égypte,Maroc|équilibrante,antidiabétique,tonique",
+"Nigelle immunitaire|immunitaire|15|95|0.4|Égypte,Inde,Turquie|immunostimulante,anti-inflammatoire",
+"Aneth|digestive|25|55|0.6|France,Allemagne,USA|digestive,carminative,antispasmodique",
+"Bourrache extrait|cosmétique|6|110|0.2|France,Méditerranée|régénérante,hydratante,anti-inflammatoire",
+"Amla|cosmétique|8|100|0.2|Inde,Népal|régénérante,antioxydante,tonique",
+"Brahmi|neurotonique|6|140|0.2|Inde,Népal|neurotonique,relaxante,adaptogène",
+"Shatavari|hormonale|8|130|0.2|Inde,Népal|équilibrante,tonique,adaptogène",
+"Triphala|digestive|10|110|0.3|Inde,Népal|digestive,détoxifiante,antioxydante",
+"Tulsi|adaptogène|15|105|0.4|Inde,Népal|adaptogène,immunostimulante,tonique",
+"Kokum|cosmétique|6|120|0.2|Inde|régénérante,antioxydante,apaisante",
+"Nagkesar|cosmétique|5|150|0.1|Inde,Sri Lanka|régénérante,antioxydante,tonique",
+"Manjistha|dermatologique|6|130|0.2|Inde,Népal|régénérante,détoxifiante,antioxydante",
+"Lodhra|astringente|5|120|0.1|Inde,Népal|astringente,antiseptique,cicatrisante",
+"Priyangu|cosmétique|4|140|0.1|Inde,Népal|régénérante,hydratante,apaisante",
+"Bala|tonique|6|110|0.2|Inde,Sri Lanka|tonique,adaptogène,antifatigue",
+"Vacha|neurotonique|5|140|0.2|Inde,Népal|neurotonique,antispasmodique,expectorante",
+"Jatamansi|relaxante|6|180|0.2|Inde,Népal,Himalaya|relaxante,antispasmodique,neurotonique",
+"Kushta|spirituelle|4|160|0.1|Inde,Himalaya|meditative,antiseptique,apaisante",
+"Chandan|spirituelle|8|190|0.2|Inde,Indonésie|meditative,apaisante,antiseptique",
+"Agar Oud indien|spirituelle|4|320|0.1|Inde,Bangladesh,Assam|meditative,anti-inflammatoire,antiseptique",
+"Kesar Safran|cosmétique|3|500|0.05|Inde,Iran,Espagne|régénérante,tonique,antidépressive",
+"Raktachandan|spirituelle|5|180|0.1|Inde,Indonésie|meditative,apaisante,antiseptique",
+"Devdar|grounding|10|95|0.3|Inde,Himalaya|grounding,antiseptique,lymphotonique",
+"Chir pine|respiratoire|25|45|0.9|Inde,Népal,Himalaya|expectorante,antiseptique,décongestionnante",
+"Kulanjan|digestive|5|120|0.2|Inde,Asie du Sud-Est|digestive,antispasmodique,tonique",
+"Pippali|digestive|6|130|0.2|Inde,Indonésie|digestive,expectorante,tonique",
+"Chitrak|anti-inflammatoire|5|120|0.2|Inde,Sri Lanka|anti-inflammatoire,digestive,tonique",
+"Apamarga|dermatologique|5|110|0.2|Inde,Népal|régénérante,astringente,antiparasitaire",
+"Guduchi|immunitaire|6|130|0.2|Inde,Népal|immunostimulante,adaptogène,tonique",
+"Kutaja|astringente|4|140|0.1|Inde,Népal|astringente,antiseptique,antiparasitaire",
+"Bibhitaki|astringente|5|130|0.2|Inde,Népal|astringente,antiseptique,expectorante",
+"Haritaki|astringente|6|125|0.2|Inde,Népal|astringente,détoxifiante,tonique",
+"Amalaki|cosmétique|7|120|0.2|Inde,Népal|régénérante,antioxydante,tonique",
+"Vibhitaki|astringente|4|135|0.1|Inde,Népal|astringente,antiseptique,tonique",
+"Shyonaka|anti-inflammatoire|4|140|0.1|Inde,Népal|anti-inflammatoire,antalgique,tonique",
+"Patala|febrifuge|5|120|0.2|Inde,Népal|fébrifuge,antispasmodique,tonique",
+"Gambhari|immunitaire|5|130|0.2|Inde,Népal|immunostimulante,antioxydante,tonique",
+"Bilva|digestive|5|125|0.2|Inde,Népal|digestive,antispasmodique,astringente",
+"Agnimantha|digestive|4|130|0.1|Inde,Sri Lanka|digestive,tonique,antispasmodique",
+"Shalaparni|tonique|4|135|0.1|Inde,Népal|tonique,adaptogène,antifatigue",
+"Prishniparni|tonique|4|140|0.1|Inde,Népal|tonique,immunostimulante,antioxydante",
+"Brihati|respiratoire|4|135|0.1|Inde,Sri Lanka|expectorante,antispasmodique,tonique",
+"Kantakari|respiratoire|4|140|0.1|Inde,Népal|expectorante,antispasmodique,immunostimulante",
+"Gokshura|détoxifiante|6|120|0.2|Inde,Afrique,Chine|diurétique,détoxifiante,tonique",
+"Eranda|dermatologique|5|115|0.2|Inde,Afrique|régénérante,antiparasitaire,antifongique",
+"Arka|antiseptique|4|140|0.1|Inde,Népal|antibactérienne,antifongique,antiparasitaire",
+"Vasa|respiratoire|5|130|0.2|Inde,Népal|expectorante,hémostatique,antispasmodique",
+"Shilajit|tonique|4|220|0.1|Himalaya,Inde,Népal|tonique,adaptogène,minéralisante",
+"Bhallataka|dermatologique|4|150|0.1|Inde,Népal|régénérante,antiseptique,antiparasitaire",
+"Kampillaka|dermatologique|4|140|0.1|Inde,Népal|régénérante,antiparasitaire,antifongique",
+"Sahadevi|dermatologique|4|135|0.1|Inde,Népal|régénérante,antiseptique,anti-inflammatoire",
+"Vishamushti|antiparasitaire|3|160|0.1|Inde,Népal|antiparasitaire,antiseptique,vermifuge"
+];
+
+var TYPE_COLORS = {
+"relaxante":"#8b5cf6","tonique":"#ef4444","antiseptique":"#059669","respiratoire":"#0891b2",
+"digestive":"#ea580c","cosmétique":"#db2777","spirituelle":"#92400e","immunitaire":"#16a34a",
+"aphrodisiaque":"#be185d","détoxifiante":"#eab308","répulsif":"#65a30d","stimulante":"#f59e0b",
+"calmante":"#a78bfa","hormonale":"#9333ea","grounding":"#78716c","équilibrante":"#06b6d4",
+"dermatologique":"#0d9488","cicatrisante":"#f43f5e","antalgique":"#dc2626","anti-inflammatoire":"#f97316",
+"circulatoire":"#b91c1c","spasmodique":"#c084fc","antiparasitaire":"#84cc16","neurotonique":"#14b8a6",
+"astringente":"#d97706","antifongique":"#65a30d","assainissante":"#0ea5e9","emménagogue":"#c026d3",
+"adaptogène":"#7c3aed","febrifuge":"#f59e0b"
+};
+
+var YEARS = [];
+for(var yy=2000; yy<=2025; yy++) YEARS.push(yy);
+
+function hashSeed(s){var h=0;for(var i=0;i<s.length;i++)h=((h<<5)-h)+s.charCodeAt(i)|0;return h}
+function mulberry32(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=seed;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+function genSeries(seed,base,trend,vol){var rng=mulberry32(seed);return YEARS.map(function(y,i){var v=base*(1+trend*i)*(1+(rng()-.5)*vol*2);if(y===2008)v*=.92;if(y===2020)v*=1.15;return v})}
+
+var OILS = OIL_STR.map(function(str){
+  var p = str.split("|");
+  var name=p[0], type=p[1], production=+p[2], price=+p[3], rendement=+p[4];
+  var regions=p[5].split(","), properties=p[6].split(",");
+  var seed=hashSeed(name), rng=mulberry32(seed);
+  var value=(production*price)/1000;
+  var prodSeries=genSeries(seed,production,0.07,0.08);
+  var priceSeries=genSeries(seed+1,price,0.05,0.06);
+  var demandSeries=genSeries(seed+2,production*0.9,0.11,0.09);
+  return {
+    name:name, type:type, production:production, price:price, rendement:rendement, value:value,
+    regions:regions, properties:properties,
+    color:TYPE_COLORS[type]||"#4ade80",
+    series:{prod:prodSeries,price:priceSeries,demand:demandSeries},
+    efficacy:Math.min(100,65+(rng()*30)+rendement*2),
+    bio:Math.min(100,50+rng()*45),
+    durability:Math.min(100,55+rng()*40),
+    impact:Math.max(10,30+rng()*45),
+    research:Math.floor(5+rng()*90)
+  };
+});
+
+var $ = function(s){return document.querySelector(s)};
+var $$ = function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
+var fmt = function(n){return Math.round(n).toLocaleString("fr-FR")};
+var fmt1 = function(n){return n.toLocaleString("fr-FR",{minimumFractionDigits:1,maximumFractionDigits:1})};
+var fmt2 = function(n){return n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})};
+
+function showToast(msg){
+  var t=$("#toast"); if(!t) return;
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove("show")},2200);
+}
+function getCssVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+
+var CHART_OK = (typeof Chart !== "undefined");
+var charts = {};
+function destroyChart(id){if(charts[id]){try{charts[id].destroy()}catch(e){};delete charts[id]}}
+
+function showFallback(id, msg){
+  var el=document.getElementById(id);
+  if(el){el.textContent=msg;el.style.display="flex"}
+}
+
+/* ===== KPIs ===== */
+function renderKPIs(){
+  var totalValue=0,totalProd=0,avgPrice=0,topOil=OILS[0];
+  for(var i=0;i<OILS.length;i++){
+    totalValue+=OILS[i].value; totalProd+=OILS[i].production; avgPrice+=OILS[i].price;
+    if(OILS[i].value>topOil.value) topOil=OILS[i];
+  }
+  avgPrice/=OILS.length;
+  var types={}; OILS.forEach(function(o){types[o.type]=1});
+  var kpis=[
+    {num:OILS.length,lbl:"Huiles référencées"},
+    {num:Object.keys(types).length,lbl:"Types distincts"},
+    {num:fmt(totalValue)+" M€",lbl:"Valeur marché totale"},
+    {num:fmt(totalProd)+" t",lbl:"Production mondiale"},
+    {num:fmt1(avgPrice)+" €/kg",lbl:"Prix moyen"},
+    {num:topOil.name,lbl:"N°1 en valeur"}
+  ];
+  $("#kpis").innerHTML = kpis.map(function(k){
+    return '<div class="kpi"><div class="kpi-num">'+k.num+'</div><div class="kpi-lbl">'+k.lbl+'</div></div>';
+  }).join("");
+}
+
+/* ===== CHARTS OVERVIEW ===== */
+function baseOpts(){
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:getCssVar("--text-dim"),font:{size:11},boxWidth:12}}},
+    scales:{
+      x:{ticks:{color:getCssVar("--text-dim"),font:{size:10}},grid:{color:getCssVar("--border"),drawBorder:false}},
+      y:{ticks:{color:getCssVar("--text-dim"),font:{size:10}},grid:{color:getCssVar("--border"),drawBorder:false}}
+    }
+  };
+}
+
+function renderOverviewCharts(){
+  var hint=$("#hintTypes"); if(hint) hint.textContent=OILS.length+" huiles";
+  if(!CHART_OK){
+    showFallback("fallbackType","⚠️ Chart.js n'a pas chargé — vérifiez votre connexion internet");
+    showFallback("fallbackTopValue","⚠️ Graphiques indisponibles");
+    showFallback("fallbackScatter","⚠️ Graphiques indisponibles");
+    showFallback("fallbackTopPrice","⚠️ Graphiques indisponibles");
+    return;
+  }
+  try{
+    // Doughnut
+    destroyChart("chartType");
+    var byType={}; OILS.forEach(function(o){byType[o.type]=(byType[o.type]||0)+1});
+    var typesSorted=Object.keys(byType).sort(function(a,b){return byType[b]-byType[a]});
+    charts.chartType=new Chart($("#chartType"),{
+      type:"doughnut",
+      data:{labels:typesSorted,
+        datasets:[{data:typesSorted.map(function(t){return byType[t]}),
+          backgroundColor:typesSorted.map(function(t){return TYPE_COLORS[t]||"#888"}),
+          borderWidth:2,borderColor:getCssVar("--surface")}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:"right",labels:{color:getCssVar("--text-dim"),font:{size:9},boxWidth:10,padding:8}}},
+        cutout:"60%"}
+    });
+
+    // Top 15 valeur
+    destroyChart("chartTopValue");
+    var top15=OILS.slice().sort(function(a,b){return b.value-a.value}).slice(0,15);
+    charts.chartTopValue=new Chart($("#chartTopValue"),{
+      type:"bar",
+      data:{labels:top15.map(function(o){return o.name}),
+        datasets:[{label:"Valeur (M€)",data:top15.map(function(o){return o.value}),
+          backgroundColor:top15.map(function(o){return o.color}),borderRadius:6}]},
+      options:Object.assign(baseOpts(),{
+        indexAxis:"y",
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{ticks:{color:getCssVar("--text-dim"),font:{size:10}},grid:{color:getCssVar("--border")}},
+          y:{ticks:{color:getCssVar("--text-dim"),font:{size:9}},grid:{display:false}}
+        }
+      })
+    });
+
+    // Scatter (limité pour performance)
+    destroyChart("chartScatter");
+    var sample=OILS.length>150 ? OILS.filter(function(o,i){return i%2===0}) : OILS;
+    charts.chartScatter=new Chart($("#chartScatter"),{
+      type:"bubble",
+      data:{datasets:[{
+        label:"Huiles",
+        data:sample.map(function(o){return {x:o.production,y:o.price,r:Math.max(3,Math.sqrt(o.value)*1.2),oil:o}}),
+        backgroundColor:sample.map(function(o){return o.color+"cc"}),
+        borderColor:sample.map(function(o){return o.color}),
+        borderWidth:1
+      }]},
+      options:Object.assign(baseOpts(),{
+        plugins:{legend:{display:false},
+          tooltip:{callbacks:{label:function(ctx){
+            var o=ctx.raw.oil;return o.name+" — "+fmt(o.production)+" t · "+fmt1(o.price)+" €/kg";
+          }}}},
+        scales:{
+          x:{title:{display:true,text:"Production (t)",color:getCssVar("--text-dim")},ticks:{color:getCssVar("--text-dim")},grid:{color:getCssVar("--border")}},
+          y:{title:{display:true,text:"Prix (€/kg)",color:getCssVar("--text-dim")},ticks:{color:getCssVar("--text-dim")},grid:{color:getCssVar("--border")}}
+        }
+      })
+    });
+
+    // Top 15 prix
+    destroyChart("chartTopPrice");
+    var topPrice=OILS.slice().sort(function(a,b){return b.price-a.price}).slice(0,15);
+    charts.chartTopPrice=new Chart($("#chartTopPrice"),{
+      type:"bar",
+      data:{labels:topPrice.map(function(o){return o.name}),
+        datasets:[{label:"Prix (€/kg)",data:topPrice.map(function(o){return o.price}),
+          backgroundColor:topPrice.map(function(o){return o.color}),borderRadius:6}]},
+      options:Object.assign(baseOpts(),{
+        indexAxis:"y",
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{ticks:{color:getCssVar("--text-dim")},grid:{color:getCssVar("--border")}},
+          y:{ticks:{color:getCssVar("--text-dim"),font:{size:9}},grid:{display:false}}
+        }
+      })
+    });
+  }catch(e){
+    console.error("Chart error:",e);
+    showFallback("fallbackType","Erreur d'affichage");
+    showFallback("fallbackTopValue","Erreur d'affichage");
+    showFallback("fallbackScatter","Erreur d'affichage");
+    showFallback("fallbackTopPrice","Erreur d'affichage");
+  }
+}
+
+/* ===== CATALOGUE ===== */
+var catalogState={query:"",type:"",sort:"name",selected:null,limit:60};
+
+function populateTypeSelects(){
+  var types={}; OILS.forEach(function(o){types[o.type]=1});
+  var typesArr=Object.keys(types).sort();
+  var opts=typesArr.map(function(t){return '<option value="'+t+'">'+t+'</option>'}).join("");
+  $("#filterType").innerHTML='<option value="">Tous les types</option>'+opts;
+  $("#tableFilterType").innerHTML='<option value="">Tous les types</option>'+opts;
+}
+
+function renderCatalog(){
+  var q=catalogState.query.trim().toLowerCase();
+  var list=OILS.filter(function(o){
+    if(catalogState.type && o.type!==catalogState.type) return false;
+    if(!q) return true;
+    var hay=(o.name+" "+o.type+" "+o.regions.join(" ")+" "+o.properties.join(" ")).toLowerCase();
+    return hay.indexOf(q)!==-1;
+  });
+  var sorters={
+    name:function(a,b){return a.name.localeCompare(b.name,"fr")},
+    production:function(a,b){return b.production-a.production},
+    price:function(a,b){return b.price-a.price},
+    value:function(a,b){return b.value-a.value},
+    yield:function(a,b){return b.rendement-a.rendement}
+  };
+  list.sort(sorters[catalogState.sort]||sorters.name);
+
+  $("#oilsCount").textContent=list.length+" huile"+(list.length>1?"s":"");
+
+  if(list.length===0){
+    $("#oilsGrid").innerHTML='<div class="empty" style="grid-column:1/-1"><div class="big">🔍</div><p>Aucune huile.</p></div>';
+    return;
+  }
+
+  // Limite d'affichage pour performance
+  var displayed=list.slice(0, catalogState.limit);
+  var html=displayed.map(function(o,i){
+    return '<div class="oil-card '+(catalogState.selected===o.name?"selected":"")+'" '+
+      'style="--oil-color:'+o.color+';animation-delay:'+Math.min(i*8,250)+'ms" data-name="'+o.name.replace(/"/g,"&quot;")+'">'+
+      '<div class="oil-name">'+o.name+'</div>'+
+      '<div class="oil-type">'+o.type+'</div>'+
+      '<div class="oil-stats">'+
+        '<div><div class="oil-stat-lbl">Production</div><div class="oil-stat-val">'+fmt(o.production)+' t</div></div>'+
+        '<div><div class="oil-stat-lbl">Prix</div><div class="oil-stat-val">'+fmt1(o.price)+' €/kg</div></div>'+
+        '<div><div class="oil-stat-lbl">Valeur</div><div class="oil-stat-val">'+fmt1(o.value)+' M€</div></div>'+
+        '<div><div class="oil-stat-lbl">Rendement</div><div class="oil-stat-val">'+fmt2(o.rendement)+'%</div></div>'+
+      '</div>'+
+    '</div>';
+  }).join("");
+
+  if(list.length>catalogState.limit){
+    html+='<div style="grid-column:1/-1;text-align:center;padding:20px">'+
+      '<button id="loadMore" style="padding:12px 24px;border-radius:11px;background:linear-gradient(135deg,#22c55e,#4ade80);color:#0a1a12;font-weight:700;font-size:.9rem">'+
+      'Afficher ' + Math.min(60, list.length-catalogState.limit) + ' huile(s) de plus (' + (list.length-catalogState.limit) + ' restantes)</button></div>';
+  }
+  $("#oilsGrid").innerHTML=html;
+
+  $$(".oil-card").forEach(function(c){
+    c.addEventListener("click",function(){
+      catalogState.selected=c.getAttribute("data-name");
+      showToast("🌿 "+catalogState.selected);
+      renderCatalog(); renderAnalyse(); switchView("analyse");
+    });
+  });
+  var lm=$("#loadMore");
+  if(lm) lm.addEventListener("click",function(){catalogState.limit+=60;renderCatalog()});
+}
+
+/* ===== ANALYSE ===== */
+function renderAnalyse(){
+  var name=catalogState.selected;
+  if(!name){
+    $("#analyseContent").innerHTML='<div class="empty"><div class="big">🌿</div><p>Cliquez sur une huile dans le catalogue.</p></div>';
+    return;
+  }
+  var o=null;
+  for(var i=0;i<OILS.length;i++){if(OILS[i].name===name){o=OILS[i];break}}
+  if(!o) return;
+
+  $("#analyseContent").innerHTML=
+    '<div class="info-card" style="--oil-color:'+o.color+'">'+
+      '<h3>'+o.name+'</h3>'+
+      '<span class="type-badge" style="--oil-color:'+o.color+'">'+o.type+'</span>'+
+      '<div class="info-grid">'+
+        '<div class="info-block"><h4>Régions</h4><div>'+o.regions.map(function(r){return '<span class="pill">'+r+'</span>'}).join("")+'</div></div>'+
+        '<div class="info-block"><h4>Propriétés</h4><ul>'+o.properties.map(function(p){return '<li>'+p+'</li>'}).join("")+'</ul></div>'+
+        '<div class="info-block"><h4>Indicateurs</h4><ul>'+
+          '<li>Production : <strong>'+fmt(o.production)+' t</strong></li>'+
+          '<li>Prix : <strong>'+fmt1(o.price)+' €/kg</strong></li>'+
+          '<li>Valeur : <strong>'+fmt1(o.value)+' M€</strong></li>'+
+          '<li>Rendement : <strong>'+fmt2(o.rendement)+'%</strong></li></ul></div>'+
+        '<div class="info-block"><h4>Scores</h4><ul>'+
+          '<li>Efficacité : <strong>'+fmt1(o.efficacy)+'/100</strong></li>'+
+          '<li>Bio : <strong>'+fmt1(o.bio)+'/100</strong></li>'+
+          '<li>Durabilité : <strong>'+fmt1(o.durability)+'/100</strong></li>'+
+          '<li>Études : <strong>'+o.research+'</strong></li></ul></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="charts-grid">'+
+      '<div class="panel"><h3>Production & Demande</h3><div class="chart-wrap tall"><canvas id="chartEvoProd"></canvas></div></div>'+
+      '<div class="panel"><h3>Prix <span class="hint">€/kg</span></h3><div class="chart-wrap tall"><canvas id="chartEvoPrice"></canvas></div></div>'+
+      '<div class="panel"><h3>Radar <span class="hint">0–100</span></h3><div class="chart-wrap tall"><canvas id="chartRadarSingle"></canvas></div></div>'+
+      '<div class="panel"><h3>Durabilité</h3><div class="chart-wrap tall"><canvas id="chartSustain"></canvas></div></div>'+
+    '</div>';
+
+  if(!CHART_OK) return;
+
+  try{
+    destroyChart("chartEvoProd");
+    charts.chartEvoProd=new Chart($("#chartEvoProd"),{
+      type:"line",
+      data:{labels:YEARS,datasets:[
+        {label:"Production",data:o.series.prod,borderColor:o.color,backgroundColor:o.color+"22",borderWidth:2.5,tension:.35,fill:true,pointRadius:0},
+        {label:"Demande",data:o.series.demand,borderColor:"#eab308",backgroundColor:"transparent",borderWidth:2,tension:.35,borderDash:[5,3],pointRadius:0}
+      ]},
+      options:baseOpts()
+    });
+
+    destroyChart("chartEvoPrice");
+    charts.chartEvoPrice=new Chart($("#chartEvoPrice"),{
+      type:"line",
+      data:{labels:YEARS,datasets:[{label:"Prix",data:o.series.price,borderColor:"#eab308",backgroundColor:"rgba(234,179,8,.15)",borderWidth:2.5,tension:.35,fill:true,pointRadius:0}]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{display:false}}})
+    });
+
+    destroyChart("chartRadarSingle");
+    var gridColor=getCssVar("--border"),textColor=getCssVar("--text-dim");
+    charts.chartRadarSingle=new Chart($("#chartRadarSingle"),{
+      type:"radar",
+      data:{labels:["Production","Prix","Efficacité","Bio","Durabilité","Recherche"],
+        datasets:[{label:o.name,
+          data:[Math.min(100,o.production/2),Math.min(100,o.price),o.efficacy,o.bio,o.durability,Math.min(100,o.research)],
+          borderColor:o.color,backgroundColor:o.color+"33",borderWidth:2,pointBackgroundColor:o.color,pointRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{r:{min:0,max:100,angleLines:{color:gridColor},grid:{color:gridColor},pointLabels:{color:textColor,font:{size:10,weight:"700"}},ticks:{display:false}}}}
+    });
+
+    destroyChart("chartSustain");
+    charts.chartSustain=new Chart($("#chartSustain"),{
+      type:"bar",
+      data:{labels:["Bio","Durabilité","Impact env.","Efficacité","Recherche"],
+        datasets:[{label:"Score /100",
+          data:[o.bio,o.durability,100-o.impact,o.efficacy,Math.min(100,o.research)],
+          backgroundColor:["#4ade80","#22c55e","#0891b2","#eab308","#a78bfa"],borderRadius:8}]},
+      options:Object.assign(baseOpts(),{
+        plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:textColor,font:{size:10}},grid:{display:false}},
+                y:{min:0,max:100,ticks:{color:textColor},grid:{color:gridColor}}}
+      })
+    });
+  }catch(e){console.error(e)}
+}
+
+/* ===== COMPARATEUR ===== */
+var compareState={selected:[],query:""};
+
+function renderCompareChips(){
+  var q=compareState.query.trim().toLowerCase();
+  var list=OILS.filter(function(o){
+    return !q || o.name.toLowerCase().indexOf(q)!==-1 || o.type.toLowerCase().indexOf(q)!==-1;
+  }).slice(0,60);
+  $("#compareChips").innerHTML=list.map(function(o){
+    var active=compareState.selected.indexOf(o.name)!==-1;
+    return '<button class="compare-chip '+(active?"active":"")+'" data-name="'+o.name.replace(/"/g,"&quot;")+'" style="--chip-color:'+o.color+'">'+
+      '<span class="dot"></span>'+o.name+'</button>';
+  }).join("");
+  $$(".compare-chip").forEach(function(b){
+    b.addEventListener("click",function(){
+      var n=b.getAttribute("data-name");
+      var idx=compareState.selected.indexOf(n);
+      if(idx!==-1) compareState.selected.splice(idx,1);
+      else{
+        if(compareState.selected.length>=5){showToast("Maximum 5 huiles");return}
+        compareState.selected.push(n);
+      }
+      renderCompareChips(); renderCompareCharts();
+    });
+  });
+  $("#compareCount").textContent=compareState.selected.length+" sélectionnée(s)";
+}
+
+function renderCompareCharts(){
+  var sel=compareState.selected.map(function(n){
+    for(var i=0;i<OILS.length;i++) if(OILS[i].name===n) return OILS[i];
+    return null;
+  }).filter(Boolean);
+
+  if(sel.length<2){
+    $("#compareCharts").style.display="none";
+    $("#compareEmpty").style.display="block";
+    return;
+  }
+  $("#compareCharts").style.display="grid";
+  $("#compareEmpty").style.display="none";
+  if(!CHART_OK) return;
+
+  try{
+    var gridColor=getCssVar("--border"),textColor=getCssVar("--text-dim");
+    destroyChart("chartRadar");
+    charts.chartRadar=new Chart($("#chartRadar"),{
+      type:"radar",
+      data:{labels:["Production","Prix","Efficacité","Bio","Durabilité","Recherche"],
+        datasets:sel.map(function(o){
+          return {label:o.name,
+            data:[Math.min(100,o.production/2),Math.min(100,o.price),o.efficacy,o.bio,o.durability,Math.min(100,o.research)],
+            borderColor:o.color,backgroundColor:o.color+"22",borderWidth:2,pointBackgroundColor:o.color,pointRadius:3};
+        })},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:textColor,font:{size:10}}}},
+        scales:{r:{min:0,max:100,angleLines:{color:gridColor},grid:{color:gridColor},pointLabels:{color:textColor,font:{size:10,weight:"700"}},ticks:{display:false}}}}
+    });
+
+    destroyChart("chartBarCompare");
+    charts.chartBarCompare=new Chart($("#chartBarCompare"),{
+      type:"bar",
+      data:{labels:sel.map(function(o){return o.name}),
+        datasets:[
+          {label:"Production (t)",data:sel.map(function(o){return o.production}),backgroundColor:"#22c55e",borderRadius:6},
+          {label:"Prix (€/kg)",data:sel.map(function(o){return o.price}),backgroundColor:"#eab308",borderRadius:6},
+          {label:"Valeur (M€)",data:sel.map(function(o){return o.value}),backgroundColor:"#0891b2",borderRadius:6}
+        ]},
+      options:Object.assign(baseOpts(),{plugins:{legend:{labels:{color:textColor,font:{size:10}}}}})
+    });
+  }catch(e){console.error(e)}
+}
+
+/* ===== TABLEAU ===== */
+var tableState={query:"",type:"",sortKey:"value",sortDir:"desc"};
+
+function renderTable(){
+  var q=tableState.query.trim().toLowerCase();
+  var list=OILS.filter(function(o){
+    if(tableState.type && o.type!==tableState.type) return false;
+    if(!q) return true;
+    return (o.name+" "+o.type+" "+o.regions.join(" ")).toLowerCase().indexOf(q)!==-1;
+  });
+  var key=tableState.sortKey,dir=tableState.sortDir==="asc"?1:-1;
+  list.sort(function(a,b){
+    var va=a[key],vb=b[key];
+    if(typeof va==="string") return va.localeCompare(vb,"fr")*dir;
+    return (va-vb)*dir;
+  });
+  $("#tableCount").textContent=list.length+" huile"+(list.length>1?"s":"");
+  $("#tableBody").innerHTML=list.map(function(o){
+    return '<tr>'+
+      '<td class="oil-name-td"><span class="type-dot" style="background:'+o.color+'"></span>'+o.name+'</td>'+
+      '<td>'+o.type+'</td>'+
+      '<td class="num">'+fmt(o.production)+'</td>'+
+      '<td class="num">'+fmt1(o.price)+'</td>'+
+      '<td class="num">'+fmt1(o.value)+'</td>'+
+      '<td class="num">'+fmt2(o.rendement)+'%</td>'+
+      '<td>'+o.regions.join(", ")+'</td>'+
+    '</tr>';
+  }).join("");
+  $$("#oilsTable th").forEach(function(th){
+    th.classList.toggle("sorted",th.getAttribute("data-key")===key);
+    var arrow=th.querySelector(".sort");
+    if(arrow) arrow.textContent=th.getAttribute("data-key")===key?(dir===1?"↑":"↓"):"↕";
+  });
+}
+
+/* ===== NAVIGATION ===== */
+var currentView="overview";
+function switchView(v){
+  currentView=v;
+  $$(".tab").forEach(function(t){t.classList.toggle("active",t.getAttribute("data-view")===v)});
+  $$(".view").forEach(function(s){s.classList.toggle("active",s.id==="view-"+v)});
+  try{
+    if(v==="overview") renderOverviewCharts();
+    if(v==="oils") renderCatalog();
+    if(v==="analyse") renderAnalyse();
+    if(v==="comparateur"){renderCompareChips();renderCompareCharts()}
+    if(v==="table") renderTable();
+  }catch(e){console.error("Render error:",e)}
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* ===== ÉCOUTEURS ===== */
+$$(".tab").forEach(function(t){t.addEventListener("click",function(){switchView(t.getAttribute("data-view"))})});
+$("#search").addEventListener("input",function(e){catalogState.query=e.target.value;catalogState.limit=60;renderCatalog()});
+$("#filterType").addEventListener("change",function(e){catalogState.type=e.target.value;catalogState.limit=60;renderCatalog()});
+$("#sortBy").addEventListener("change",function(e){catalogState.sort=e.target.value;renderCatalog()});
+$("#compareSearch").addEventListener("input",function(e){compareState.query=e.target.value;renderCompareChips()});
+$("#tableSearch").addEventListener("input",function(e){tableState.query=e.target.value;renderTable()});
+$("#tableFilterType").addEventListener("change",function(e){tableState.type=e.target.value;renderTable()});
+$$("#oilsTable th").forEach(function(th){
+  th.addEventListener("click",function(){
+    var k=th.getAttribute("data-key"); if(!k) return;
+    if(tableState.sortKey===k) tableState.sortDir=tableState.sortDir==="asc"?"desc":"asc";
+    else{tableState.sortKey=k;tableState.sortDir="desc"}
+    renderTable();
+  });
+});
+
+/* ===== THÈME ===== */
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme",t);
+  var b=$("#themeBtn"); if(b) b.textContent=t==="dark"?"🌙":"☀️";
+  try{localStorage.setItem("pharma-theme",t)}catch(e){}
+}
+$("#themeBtn").addEventListener("click",function(){
+  var cur=document.documentElement.getAttribute("data-theme")||"dark";
+  applyTheme(cur==="dark"?"light":"dark");
+  if(currentView==="overview") renderOverviewCharts();
+});
+
+/* ===== INIT ===== */
+(function init(){
+  try{
+    var saved="dark";
+    try{saved=localStorage.getItem("pharma-theme")||"dark"}catch(e){}
+    applyTheme(saved);
+
+    renderKPIs();
+    populateTypeSelects();
+    renderOverviewCharts();
+    renderCatalog();
+    renderTable();
+
+    setTimeout(function(){showToast("🌿 "+OILS.length+" huiles essentielles chargées")},400);
+  }catch(e){
+    console.error("Init error:",e);
+    var b=document.getElementById('errorBox');
+    if(b){ b.textContent="Erreur d'initialisation : "+e.message; b.classList.add('show'); }
+  }
+})();
+</script>
+</body>
+</html>
